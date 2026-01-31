@@ -1,31 +1,18 @@
-name: 编译内核a15-6-6
+name: 编译小米15Pro A15-6.6内核 (添加TMPFS配置)
 
 permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: write   # Allows triggering actions
-  
+  contents: write
+  actions: write
+
 on:
   workflow_dispatch:
     inputs:
-      kernelsu_variant:
-        description: "选择 KernelSU"
+      # 新增：小米15Pro内核defconfig文件名，必须核对源码后填写
+      mi_defconfig:
+        description: "小米15Pro内核defconfig文件名(arch/arm64/configs下)"
         required: true
-        type: choice
-        options:
-          - Official
-          - Next
-          - MKSU
-          - SukiSU
-        default: SukiSU
-      kernelsu_branch:
-        description: "选择 ksu 分支"
-        required: true
-        type: choice
-        options:
-          - Stable(标准)
-          - Dev(开发)
-          - Other(其他/指定)
-        default: Stable(标准)
+        type: string
+        default: "dada_defconfig"
       version:
         description: '自定义版本名(如位于6.6.77-android15-8<自定义版本名>/留空则使用默认版本号)'
         required: false
@@ -35,27 +22,7 @@ on:
         required: false
         type: string
       use_zram:
-        description: '是否开启增加更多ZRAM算法?'
-        required: true
-        type: boolean
-        default: true
-      use_bbg:
-        description: '是否开启BBG防格机补丁?（报错请关闭）'
-        required: true
-        type: boolean
-        default: true
-      use_kpm:
-        description: '是否开启KPM功能?'
-        required: true
-        type: boolean
-        default: true
-      supp_op:
-        description: '是否开启一加8E处理器机型支持?(非该机型无须勾)'
-        required: false
-        type: boolean
-        default: false
-      get_manager:
-        description: '获取最新KSU管理器和SUS模块?'
+        description: '是否开启更多ZRAM算法?'
         required: true
         type: boolean
         default: true
@@ -64,27 +31,21 @@ on:
         required: false
         type: boolean
         default: false
+      # 移除所有 KernelSU/BBG/KPM/一加8E/get_manager 相关输入项
 
 jobs:
-
-  build-kernel-a15-6-6:
-    uses: ./.github/workflows/kernel-a15-6.6.yml
+  # 修改任务名和调用的工作流目标
+  build-xiaomi15pro-a15-6-6:
+    uses: ./.github/workflows/Android 15 6.6.yml  # 替换为你修改后的工作流文件名
     secrets: inherit
     with:
       make_release: false
-      kernelsu_variant: ${{ inputs.kernelsu_variant }}
-      kernelsu_branch: ${{ inputs.kernelsu_branch }}
+      # 传递新增的defconfig参数
+      mi_defconfig: ${{ inputs.mi_defconfig }}
       version: ${{ inputs.version }}
       use_zram: ${{ inputs.use_zram }}
-      use_bbg: ${{ inputs.use_bbg }}
-      use_kpm: ${{ inputs.use_kpm }}
-      supp_op: ${{ inputs.supp_op }}
       onlyAk3: ${{ inputs.onlyAk3 }}
       build_time: ${{ inputs.build_time }}
-  get-ksu-manager:
-    if: ${{ inputs.get_manager }}
-    uses: ./.github/workflows/get-manager.yml
-    secrets: inherit
-    with:
-      kernelsu_variant: ${{ inputs.kernelsu_variant }}
+      # 移除所有 KernelSU/BBG/KPM/supp_op 相关传参
 
+  # 删除 get-ksu-manager 无用任务
