@@ -1,47 +1,24 @@
-name: Android 15 6.6
+name: Android 15 6.6 (小米15Pro专属)
 permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: write   # Allows triggering actions
+  contents: write
+  actions: write
 
 on:
-  workflow_call:  # This allows this workflow to be called from another workflow
+  workflow_call:
     inputs:
       make_release:
         required: true
         type: boolean
-        default: true
-      kernelsu_variant:
-        required: true
-        type: string
-        default: Next
-      kernelsu_branch:
-        required: true
-        type: string
-        default: Stable
+        default: false
       version:
         required: false
         type: string
         default: ""
       use_zram:
-        description: '是否开启增加更多ZRAM算法?'
+        description: '是否开启更多ZRAM算法?'
         required: true
         type: boolean
         default: true
-      use_bbg:
-        description: '是否开启BBG防格机补丁?'
-        required: true
-        type: boolean
-        default: true
-      use_kpm:
-        description: '是否开启KPM功能?'
-        required: true
-        type: boolean
-        default: true
-      supp_op:
-        description: '是否开启一加8E处理器机型支持?'
-        required: false
-        type: boolean
-        default: false
       onlyAk3:
         description: '仅上传AK3压缩包?(无boot,下载更快)'
         required: false
@@ -51,19 +28,20 @@ on:
         description: '设置内核构建时间(格式见仓库说明)'
         required: false
         type: string
+      # 新增：小米15Pro的defconfig文件名，必填
+      mi_defconfig:
+        required: true
+        type: string
+        default: "dada_defconfig"
+      # 移除所有 KernelSU/SUSFS/BBG/KPM/一加8E 相关输入项
 
 jobs:
-  build-kernel-a15-6-6-kernelsu-susfs:
+  build-xiaomi15pro-a15-6-6:
     strategy:
       fail-fast: false
       matrix:
         include:
-          # - sub_level: "30"
-          #   os_patch_level: "2024-08"
-          # - sub_level: "46"
-          #   os_patch_level: "2024-09"
-          # - sub_level: "50"
-          #   os_patch_level: "2024-10"
+          # 保留原有的sub_level和os_patch_level矩阵，按需删减
           - sub_level: "56"
             os_patch_level: "2024-11"
           - sub_level: "57"
@@ -80,20 +58,19 @@ jobs:
             os_patch_level: "2025-09"
           - sub_level: "X"
             os_patch_level: "lts"
+    # 核心修改：调用小米15Pro专属编译工作流（替换原gki-kernel.yml）
     uses: ./.github/workflows/gki-kernel.yml
     secrets: inherit
     with:
-      make_release: ${{ inputs.make_release || false }}
+      make_release: ${{ inputs.make_release }}
       android_version: "android15"
       kernel_version: "6.6"
       sub_level: ${{ matrix.sub_level }}
       os_patch_level: ${{ matrix.os_patch_level }}
-      kernelsu_variant: ${{ inputs.kernelsu_variant || 'Next' }}
-      kernelsu_branch: ${{ inputs.kernelsu_branch || 'Dev' }}
-      version: ${{ inputs.version || '' }}
+      version: ${{ inputs.version }}
       use_zram: ${{ inputs.use_zram }}
-      use_bbg: ${{ inputs.use_bbg }}
-      use_kpm: ${{ inputs.use_kpm }}
-      supp_op: ${{ inputs.supp_op || false }}
-      onlyAk3: ${{ inputs.onlyAk3 || false }}
-      build_time: ${{ inputs.build_time || '' }}
+      onlyAk3: ${{ inputs.onlyAk3 }}
+      build_time: ${{ inputs.build_time }}
+      # 传递小米defconfig参数到专属编译工作流
+      mi_defconfig: ${{ inputs.mi_defconfig }}
+      # 移除所有 KernelSU/SUSFS/BBG/KPM/supp_op 相关参数
